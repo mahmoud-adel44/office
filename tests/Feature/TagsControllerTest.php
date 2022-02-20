@@ -12,12 +12,14 @@ class TagsControllerTest extends TestCase
     /**
      * @test
      */
-    public function itListTags()
+    public function testItListTags(): void
     {
         $response = $this->get('/api/tags');
 
-        $response->assertStatus(200);
+//        $response->assertStatus(200);
+        $response->assertOk();
 
         $this->assertNotNull($response->json('data')[0]['id']);
     }
+
 }
