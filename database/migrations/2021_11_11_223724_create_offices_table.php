@@ -13,10 +13,11 @@ class CreateOfficesTable extends Migration
      */
     public function up()
     {
-        Schema::create('offices', function (Blueprint $table) {
+        Schema::create('offices', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->index()->constrained();
             $table->string('title');
+            $table->foreignId('featured_image_id')->index()->nullable();
             $table->text('description');
             $table->decimal('lat' , 11 , 8);
             $table->decimal('lng' , 11 , 8);
