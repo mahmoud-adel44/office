@@ -2,19 +2,18 @@
 
 namespace App\Notifications;
 
-use App\Models\Office;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
+use App\Models\Reservation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Notification;
 use JetBrains\PhpStorm\ArrayShape;
 
-class OfficePendingApprovalNotification extends Notification implements ShouldQueue
+class NewUserReservationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public Office $office
+//        public Reservation $reservation
     ){}
 
     public function via($notifiable): array
@@ -22,7 +21,6 @@ class OfficePendingApprovalNotification extends Notification implements ShouldQu
         return ['database'];
     }
 
-    #[ArrayShape(['message' => "string"])]
     public function toDatabase($notifiable): array
     {
         return [
@@ -36,6 +34,4 @@ class OfficePendingApprovalNotification extends Notification implements ShouldQu
             'message' => 'new reservation created'
         ];
     }
-
-
 }

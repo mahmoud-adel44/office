@@ -2,18 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Pipelines\Filtration\Office\FilterByHostId;
+use App\Http\Pipelines\Filtration\Office\FilterByTags;
+use App\Http\Pipelines\Filtration\Office\FilterByUserId;
+use App\Http\Pipelines\Filtration\Office\FilterByVisitorId;
+use App\Http\Pipelines\Filtration\Office\OfficeAvailable;
+use App\Http\Pipelines\Filtration\Office\OrderByDistance;
+use App\Http\Pipelines\Filtration\Office\ReturnWithImages;
+use App\Http\Pipelines\Filtration\Office\ReturnWithReservationsCount;
+use App\Http\Pipelines\Filtration\Office\ReturnWithTags;
+use App\Http\Pipelines\Filtration\Office\ReturnWithUser;
 use App\Http\Requests\StoreOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Reservation;
-use App\Models\User;
-use App\Notifications\OfficePendingApprovalNotification;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Arr;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -22,27 +29,24 @@ class OfficeController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $offices = Office::query()
-            ->when(request('user_id') && auth()->user() && request('user_id') == auth()->id(),
-                fn($builder) => $builder,
-                fn($builder) => $builder->where('approval_status', Office::APPROVAL_APPROVED)->where('hidden', false)
-            )
-            ->when(request('user_id'), fn($builder) => $builder->whereUserId(request('user_id')))
-            ->when(request('visitor_id'),
-                fn($builder) => $builder->whereRelation('reservations', 'user_id', '=', request('visitor_id'))
-            )
-            ->when(
-                request('lat') && request('lng'),
-                fn($builder) => $builder->nearestTo(request('lat'), request('lng')),
-                fn(Builder $builder) => $builder->orderBy('id', 'ASC')
-            )
-            ->with(['images', 'tags', 'user'])
-            ->withCount([
-                'reservations' => fn(Builder $builder) => $builder->where('status', Reservation::STATUS_ACTIVE)
-            ])
-            ->paginate(20);
+        $pipes = [
+            OfficeAvailable::class,
+            FilterByHostId::class,
+            FilterByUserId::class,
+            FilterByVisitorId::class,
+            OrderByDistance::class,
+            FilterByTags::class,
+            ReturnWithImages::class,
+            ReturnWithTags::class,
+            ReturnWithUser::class,
+            ReturnWithReservationsCount::class,
+        ];
         return OfficeResource::collection(
-            $offices
+            app(Pipeline::class)
+                ->send(Office::query())
+                ->through($pipes)
+                ->thenReturn()
+                ->paginate(request('per_page', 20))
         );
     }
 
@@ -56,9 +60,9 @@ class OfficeController extends Controller
 
     }
 
-    public function create(StoreOfficeRequest $request) : OfficeResource
+    public function create(StoreOfficeRequest $request): OfficeResource
     {
-        $office = DB::transaction( function () use ($request) {
+        $office = DB::transaction(function () use ($request) {
             $office = Office::create($request->except('tags') + ['user_id' => auth('sanctum')->id()]);
             if (isset($request->tags)) {
                 $office->tags()->attach($request->only('tags')['tags']);
@@ -110,8 +114,6 @@ class OfficeController extends Controller
 
         $office->delete();
     }
-
-
 
 
 }

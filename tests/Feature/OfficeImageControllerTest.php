@@ -71,22 +71,22 @@ class OfficeImageControllerTest extends TestCase
     /**
      * @test
      */
-//    public function itDoesntDeleteImageThatBelongsToAnotherResource(): void
-//    {
-//        $user = User::factory()->create();
-//        $office = Office::factory()->for($user)->create();
-//        $office2 = Office::factory()->for($user)->create();
-//
-//        $image = $office2->images()->create([
-//            'path' => 'office_image.jpg'
-//        ]);
-//
-//        $this->actingAs($user);
-//
-//        $response = $this->deleteJson("api/offices/{$office->id}/images/{$image->id}");
-//
-//        $response->assertNotFound();
-//    }
+    public function itDoesntDeleteImageThatBelongsToAnotherResource(): void
+    {
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+        $office2 = Office::factory()->for($user)->create();
+
+        $image = $office2->images()->create([
+            'path' => 'office_image.jpg'
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson("api/offices/{$office->id}/images/{$image->id}");
+
+        $response->assertNotFound();
+    }
 
     /**
      * @test

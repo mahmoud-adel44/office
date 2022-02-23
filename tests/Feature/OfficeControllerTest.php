@@ -65,7 +65,9 @@ class OfficeControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonCount(5, 'data');
     }
-
+    /**
+     * @test
+     */
     public function itFiltersByUserId(): void
     {
         Office::factory(3)->create();
@@ -74,7 +76,7 @@ class OfficeControllerTest extends TestCase
         $office = Office::factory()->for($host)->create();
 
         $response = $this->get(
-            '/offices?user_id=' . $host->id
+            'api/offices?user_id=' . $host->id
         );
 
         $response->assertOk()
@@ -144,7 +146,7 @@ class OfficeControllerTest extends TestCase
     /**
      * @test
      */
-    public function testOrderByDistanceIsProvided(): void
+    public function itOrderByDistanceIsProvided(): void
     {
         Office::factory()->create([
             'lat' => '39.74051727562952',
