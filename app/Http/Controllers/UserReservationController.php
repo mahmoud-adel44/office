@@ -13,14 +13,8 @@ use App\Http\Requests\UserReservationRequest;
 use App\Http\Resources\ReservationResource;
 use App\Models\Office;
 use App\Models\Reservation;
-
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Pipeline\Pipeline;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Validation\ValidationException;
-use Str;
 
 class UserReservationController extends Controller
 {
@@ -46,22 +40,19 @@ class UserReservationController extends Controller
     public function store(StoreUserReservationRequest $request, Office $office): ReservationResource
     {
         return ReservationResource::make(
-            HandleReservation::handle($request , $office)->load('office')
+            HandleReservation::handle($request, $office)->load('office')
         );
     }
 
-    public function show(Reservation $reservation)
+    public function cancel(Reservation $reservation): ReservationResource
     {
-        //
+        $reservation->update([
+            'status' => Reservation::STATUS_CANCELLED
+        ]);
+
+        return ReservationResource::make(
+            $reservation->load('office')
+        );
     }
 
-    public function update(Request $request, Reservation $reservation)
-    {
-        //
-    }
-
-    public function destroy(Reservation $reservation)
-    {
-        //
-    }
 }

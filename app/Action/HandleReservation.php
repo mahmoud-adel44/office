@@ -36,10 +36,12 @@ final class HandleReservation
                 return $office->reservations()->create(
                     array_merge(
                         $request->except('office_id'),
-                        ['user_id' => auth()->id(),
+                        [
+                            'user_id' => auth()->id(),
                             'wifi_password' => Str::random(),
                             'status' => Reservation::STATUS_ACTIVE,
-                            'price' => $price,]
+                            'price' => $price,
+                        ]
                     )
                 );
             });
